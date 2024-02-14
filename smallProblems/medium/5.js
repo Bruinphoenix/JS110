@@ -25,5 +25,5 @@ function wordToDigit(str) {
     .join('');
 }
 
-let result = wordToDigit('Please call me at five five five one two three four. Thanks.');
+let result = wordToDigit('Please weight call me at five five five one two three four. Thanks.');
 console.log(result);
