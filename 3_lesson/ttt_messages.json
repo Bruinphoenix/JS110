@@ -1,0 +1,11 @@
+{
+  "welcome": " ",
+  "playerChoose": "Please choose an empty board square.\n The current empty squares are: ",
+  "playerChooseError": "That choice does not seem to be valid. \n Current valid squares are: ",
+  "promptPlayAgain": "Would you like to play again? (y/n) or press enter to keep playing",
+  "promptPlayAgainError": "You must select 'y' or 'n' ",
+  "tie": "It's a tie!",
+  "computerMaxScore": "The computer reached the max score! This makes it the grand winner!",
+  "playerMaxScore": "You reached the max score! This makes it the grand winner!",
+  "goodbye": "Thank you for playing TikTacToe!"
+}
