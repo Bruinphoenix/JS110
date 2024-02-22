@@ -22,6 +22,50 @@ function joinOr(arr, delimiter = ', ', finalDelimiter = 'or') {
 
 }
 
+function displayGameObject(cardsInPlay, deck) {
+
+  function returnOf(card) {
+    return padToTarget('OF',)
+  }
+
+
+
+  function padToTarget(word, target = 8, display = true) {
+    let padFront = Math.ceil((target - word.length) / 2);
+    let padBack = Math.floor((target - word.length) / 2);
+
+    if (display) {
+      return `${' '.repeat(padFront)}${word}${' '.repeat(padBack)}`;
+    }
+    return `${' '.repeat(target)}`;
+  }
+  let playerCard1;
+
+  console.clear();
+  console.log(
+    `  _____________________________________________________________________________________________________________________________\n`,
+    `|                         PLAYER CARDS:                        |                         DEALER CARDS:                        |\n`,
+    `|______________________________________________________________|______________________________________________________________|\n`,
+    `|   ________    ________    ________    ________    ________   |   ________    ________    ________    ________    ________   |\n`,
+    `|  |        |  |        |  |        |  |        |  |        |  |  |        |  |        |  |        |  |        |  |        |  |\n`,
+    `|  |        |  |        |  |        |  |        |  |        |  |  |        |  |        |  |        |  |        |  |        |  |\n`,
+    `|  |        |  |        |  |        |  |        |  |        |  |  |        |  |        |  |        |  |        |  |        |  |\n`,
+    `|  |${returnOf(playerCard1)}|  |${returnOf(playerCard1)}|  |${returnOf(playerCard1)}|  |${returnOf(playerCard1)}|  |${returnOf(playerCard1)}|\
+  |  |${returnOf(playerCard1)}|  |${returnOf(playerCard1)}|  |${returnOf(playerCard1)}|  |${returnOf(playerCard1)}|  |${returnOf(playerCard1)}|  |\n`,
+    `|  |        |  |        |  |        |  |        |  |        |  |  |        |  |        |  |        |  |        |  |        |  |\n`,
+    `|  |        |  |        |  |        |  |        |  |        |  |  |        |  |        |  |        |  |        |  |        |  |\n`,
+    `|  |________|  |________|  |________|  |________|  |________|  |  |________|  |________|  |________|  |________|  |________|  |\n`,
+    `|______________________________________________________________|______________________________________________________________|\n`,
+    `|                         PLAYER SCORE:                        |                         DEALER SCORE:                        |\n`,
+    `|______________________________________________________________|______________________________________________________________|\n`,
+    `|                                                              |                                                              |\n`,
+    `|                                                              |                                                              |\n`,
+    `|______________________________________________________________|______________________________________________________________|\n`,
+  );
+
+}
+
+
 function shuffleDeck(deck) {
   for (let i = deck.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -193,6 +237,7 @@ function play21() {
   }
 }
 
-play21();
+//play21();
 
 //console.log(calcHandValue([{ suit: 'Clubs', value: 6 }, { suit: 'Clubs', value: 'Jack' }]))
+displayGameObject();
