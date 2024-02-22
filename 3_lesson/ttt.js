@@ -1,4 +1,3 @@
-const readline = require('readline-sync');
 const util = require('./utilities.js');
 const MESSAGES = require('./ttt_messages.json');
 const EMPTY_MARKER = ' ';
@@ -14,7 +13,7 @@ const WIN_COMBOS = [
   [3, 6, 9],
   [1, 5, 9],
   [3, 5, 7],
-]
+];
 
 function joinOr(arr, delimiter = ', ', finalDelimiter = 'or') {
   switch (arr.length) {
@@ -62,7 +61,7 @@ function initializeBoard() {
     7: ' ',
     8: ' ',
     9: ' ',
-  }
+  };
   return board;
 }
 
@@ -74,56 +73,93 @@ function getEmptySquares(board) {
 function boardFull(board) {
   return getEmptySquares(board).length === 0;
 }
-
-function aiNextMove(board) {
-  // TODO add nextMove documentation
-  let selectedMove = undefined;
-
-  function calcWinMove(marker) {
-    WIN_COMBOS.forEach(combo => {
-      [a, b, c] = combo;
-      [markAtA, markAtB, markAtC] = [board[a], board[b], board[c]];
-
-      if (markAtA === marker && markAtB === marker && markAtC === EMPTY_MARKER) {
-        selectedMove = c;
-      }
-      if (markAtB === marker && markAtC === marker && markAtA === EMPTY_MARKER) {
-        selectedMove = a;
-      }
-      if (markAtA === marker && markAtC === marker && markAtB === EMPTY_MARKER) {
-        selectedMove = b;
-      }
-    })
+function findStaticValue(board) {
+  let winner = detectWinner(board);
+  if (winner === 'computer') {
+    return 1;
+  } else if (winner === 'player') {
+    return -1;
+  } else {
+    return 0;
   }
-
-  //defensive iteration, attemps to find a place where the human player only needs one more move to win 
-  calcWinMove(PLAYER_MARKER);
-  //offensive loop, tries to find a place the computer could win
-  calcWinMove(COMPUTER_MARKER);
-
-  return selectedMove;
 }
 
+function generatePossibleMoves(board, currentMarker) {
+  let emptySquares = getEmptySquares(board);
+  let possibleMoves = [];
 
+  emptySquares.forEach(square => {
+    let boardCopy = Object.assign({}, board);
+    boardCopy[square] = currentMarker;
+    possibleMoves.push({
+      board: boardCopy,
+      position: square,
+    });
+  });
+  return possibleMoves;
+}
+
+function findOptimalMove(board, maximizingPlayer) {
+  let minMaxEval = maximizingPlayer ? -Infinity : Infinity;
+  let currentMinMaxMove = null;
+  const marker = maximizingPlayer ? COMPUTER_MARKER : PLAYER_MARKER;
+
+  let possibleMoves = generatePossibleMoves(board, marker);
+
+  possibleMoves.forEach(move => {
+    let evalMove = miniMax(move.board, !maximizingPlayer);
+    let moveScore = evalMove.score;
+    if (maximizingPlayer) {
+      if (moveScore > minMaxEval) {
+        minMaxEval = moveScore;
+        currentMinMaxMove = move.position;
+      }
+    } else if (!maximizingPlayer) {
+      if (moveScore < minMaxEval) {
+        minMaxEval = moveScore;
+        currentMinMaxMove = move.position;
+      }
+    }
+  });
+
+  return {
+    position: currentMinMaxMove,
+    score: minMaxEval,
+  };
+
+}
+
+function miniMax(board, maximizingPlayer = true) {
+  let choice = {
+    position: undefined,
+    score: undefined,
+  };
+
+  if (someoneWon(board) || boardFull(board)) {
+    choice.score = findStaticValue(board);
+    return choice;
+  }
+
+  return findOptimalMove(board, maximizingPlayer);
+}
 
 function detectWinner(board) {
   let winner = undefined;
   WIN_COMBOS.forEach(combo => {
-    [a, b, c] = combo;
-    debugger;
+    let [posA, posB, posC] = combo;
 
     if (
-      board[a] === board[b] &&
-      board[b] === board[c] &&
-      board[a] !== EMPTY_MARKER
+      board[posA] === board[posB] &&
+      board[posB] === board[posC] &&
+      board[posA] !== EMPTY_MARKER
     ) {
-      if (board[a] === COMPUTER_MARKER) {
+      if (board[posA] === COMPUTER_MARKER) {
         winner = 'computer';
       } else {
         winner = 'player';
       }
     }
-  })
+  });
   return winner;
 }
 
@@ -132,13 +168,12 @@ function someoneWon(board) {
 }
 
 function playerChoosesSquare(board) {
-  const emtpyMarker = ' ';
   let square;
   let emptySquares = getEmptySquares(board);
 
   square = util.getValidInput(
-    `${MESSAGES.playerChoose} ${joinOr(emptySquares, ', ', 'or')}`,
-    `${MESSAGES.playerChooseError} ${emptySquares}`,
+    `${MESSAGES.playerChoose} ${joinOr(emptySquares)}`,
+    `${MESSAGES.playerChooseError} ${joinOr(emptySquares)}`,
     emptySquares);
 
   board[square] = PLAYER_MARKER;
@@ -146,7 +181,7 @@ function playerChoosesSquare(board) {
 
 function computerChoosesSquare(board) {
   let emptySquares = getEmptySquares(board);
-  let aiGuess = aiNextMove(board);
+  let aiGuess = miniMax(board).position;
   let randSquare = util.randomObjValue(emptySquares);
   let squareChoice = aiGuess ? aiGuess : randSquare;
   board[squareChoice] = COMPUTER_MARKER;
@@ -159,60 +194,64 @@ function initScore() {
   };
 }
 
+function playIndividualGame(board) {
+  while (true) {
+    displayBoard(board);
+    playerChoosesSquare(board);
+    if (boardFull(board) || someoneWon(board)) {
+      displayBoard(board);
+      break;
+    }
+
+    computerChoosesSquare(board);
+    if (boardFull(board) || someoneWon(board)) {
+      displayBoard(board);
+      break;
+    }
+  }
+}
+
+function logAndDisplayWinner(board, score) {
+  let winner = detectWinner(board);
+  console.log(winner ? `The ${winner} won!` : MESSAGES.tie);
+
+  if (winner === 'computer') {
+    score.computer += 1;
+  } else if (winner === 'player') {
+    score.player += 1;
+  }
+
+  console.log(`The score is:\n Player: ${score.player} \n Computer: ${score.computer}`);
+
+  if (score.computer === MAX_SCORE) {
+    console.log(MESSAGES.computerMaxScore);
+    score = initScore();
+  } else if (score.player === MAX_SCORE) {
+    console.log(MESSAGES.playerMaxScore);
+    score = initScore();
+  }
+}
+
 function playTTT() {
   let score = initScore();
 
-  //keep playing games until user manually breaks by entering 'n' at the end of play
+  //keep playing games until user breaks by entering 'n' at end of play
   while (true) {
     let board = initializeBoard();
 
-    //display board and keep prompting play until one of the players has won
-    while (true) {
-      displayBoard(board);
-      playerChoosesSquare(board);
-      if (boardFull(board) || someoneWon(board)) {
-        displayBoard(board);
-        break;
-      };
-
-      computerChoosesSquare(board);
-      if (boardFull(board) || someoneWon(board)) {
-        displayBoard(board);
-        break;
-      };
-    }
-
-    let winner = detectWinner(board);
-    if (winner) {
-      console.log(`The ${winner} won!`)
-    } else {
-      console.log(MESSAGES.tie);
-    }
-
-    if (winner === 'computer') {
-      score.computer += 1;
-    } else if (winner === 'player') {
-      score.player += 1;
-    }
-
-    console.log(`The score is:\n Player: ${score.player} \n Computer: ${score.computer}`)
-
-    if (score.computer === MAX_SCORE) {
-      console.log(MESSAGES.computerMaxScore);
-      score = initScore();
-    } else if (score.player === MAX_SCORE) {
-      console.log(MESSAGES.playerMaxScore);
-      score = initScore();
-    }
+    playIndividualGame(board);
+    logAndDisplayWinner(board, score);
 
     let keepPlaying = util.getValidInput(
       MESSAGES.promptPlayAgain,
       MESSAGES.promptPlayAgainError,
       ['y', 'Y', 'N', 'n', '']
-    )
+    );
     if (keepPlaying === 'n' || keepPlaying === 'N') break;
   }
+
   util.prompt(MESSAGES.goodbye);
 
 }
+
 playTTT();
