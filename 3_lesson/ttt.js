@@ -103,7 +103,6 @@ function findOptimalMove(board, maximizingPlayer) {
   let minMaxEval = maximizingPlayer ? -Infinity : Infinity;
   let currentMinMaxMove = null;
   const marker = maximizingPlayer ? COMPUTER_MARKER : PLAYER_MARKER;
-
   let possibleMoves = generatePossibleMoves(board, marker);
 
   possibleMoves.forEach(move => {
