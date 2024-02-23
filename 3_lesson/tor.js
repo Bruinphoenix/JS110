@@ -131,6 +131,7 @@ function GameObject() {
   const player = new Player();
   const dealer = new Player();
   const GV = new GameVariables();
+  const display = new DisplayObject();
 
   //INITIALIZATION METHODS
   const init = {
@@ -150,10 +151,9 @@ function GameObject() {
       }
 
       resetGameValues();
-      displayState();
+      display.displayState();
 
-      console.log('How many hands would you like to play today?')
-      GV.numberOfHands = readline.question();
+      GV.numberOfHands = util.getValidNumber('How many hands would you like to play today?', 'Please enter a number of hands you would like to play...', false)
       console.log(`Great! Lets play ${GV.numberOfHands} hands together!`);
     },
 
@@ -171,118 +171,136 @@ function GameObject() {
     },
 
     playerInfo: function () {
-      displayState();
+      display.displayState();
       console.log('Welcome to 21! Please enter your name.')
       player.name = readline.question().toUpperCase();
     },
   }
 
-  function padToTarget(word, target = 8, display = true) {
-    let padFront = Math.ceil((target - word.length) / 2);
-    let padBack = Math.floor((target - word.length) / 2);
-
-    if (display) {
-      return `${' '.repeat(padFront)}${word}${' '.repeat(padBack)}`;
-    }
-    return `${' '.repeat(target)}`;
-  }
-
-  function displayState() {
-    function returnOf(card, display = true) {
-      if (card && display) {
-        return padToTarget('OF',)
-      } else if (card) {
-        return " HIDDEN ";
+  //DISPLAY METHODS
+  function DisplayObject() {
+    this.displayGameOver = function () {
+      const winner = checkForWin();
+      if (winner === 'player') {
+        console.log('YOU WIN!!!');
+        player.score += 1;
+      } else if (winner === 'dealer') {
+        console.log('THE DEALER WINS!!!');
+        dealer.score += 1;
+      } else {
+        console.log(`IT'S A TIE!`);
       }
-      return padToTarget('', 8, false)
+      console.log(`THE SCORE IS: \nDEALER: ${dealer.score} GAMES \n${player.name}: ${player.score} GAMES`)
     }
 
-    function returnSuit(card, display = true) {
-      if (card && display) {
-        return padToTarget(`${card.suit}`)
+    this.displayFinalState = function () {
+      //this is what displayState should look like 
+      //but I figured that out after it was finished 
+      //for the second time...
+      const TOTAL_WIDTH = 59;
+
+      let winnerMessage;
+      if (player.score > dealer.score) {
+        winnerMessage = 'YOU WIN!!! THINK YOU COULD LOAN ME SOME OF THAT LOOT...';
+      } else if (player.score < dealer.score) {
+        winnerMessage = 'YOU LOOSE. BETTER LUCK NEXT TIME OLD-TIMER...'
+      } else {
+        winnerMessage = 'ITS A TIE! LIVE TO GAMBLE ANOTHER DAY PARTNER...'
       }
-      return padToTarget('', 8, false)
-    }
+      console.clear();
+      console.log(' ' + '_'.repeat(TOTAL_WIDTH - 2) + ' ');
+      console.log(`|${' '.repeat(TOTAL_WIDTH - 2)}|`);
+      console.log(`|${' '.repeat(TOTAL_WIDTH - 2)}|`);
+      console.log(`|${' '.repeat(TOTAL_WIDTH - 2)}|`);
+      console.log(`|${padToTarget('THANK YOU FOR PLAYING 21!', TOTAL_WIDTH - 2, true)}|`);
+      console.log(`|${' '.repeat(TOTAL_WIDTH - 2)}|`);
+      console.log(`|${' '.repeat(TOTAL_WIDTH - 2)}|`);
+      console.log(`|${padToTarget('THE FINAL SCORE IS:', TOTAL_WIDTH - 2, true)}|`);
+      console.log(`|${' '.repeat(TOTAL_WIDTH - 2)}|`);
+      console.log(`|${padToTarget(`DEALER: ${dealer.score}`, TOTAL_WIDTH - 2, true)}|`);
+      //console.log(`|${' '.repeat(TOTAL_WIDTH - 2)}|`);
+      console.log(`|${padToTarget(`${player.name}: ${player.score}`, TOTAL_WIDTH - 2, true)}|`);
+      console.log(`|${' '.repeat(TOTAL_WIDTH - 2)}|`);
+      console.log(`|${padToTarget(winnerMessage, TOTAL_WIDTH - 2, true)}|`);
+      console.log('|' + '_'.repeat(TOTAL_WIDTH - 2) + '|');
 
-    function returnValue(card, display = true) {
-      if (card && display) {
-        return padToTarget(`${card.value}`)
+      const another_match = util.getValidInput(`WOULD YOU LIKE TO PLAY ANOTHER MATCH? (Y/N)`, 'PLEASE TYPE \'Y\' FOR YES OR \'N\' FOR NO', ['Y', 'N', 'y', 'n']);
+      if (another_match === 'y' || another_match === 'Y') {
+        return true;
+      } else {
+        return false;
       }
-      return padToTarget('', 8, false)
     }
 
-    function returnScore(player, display = true) {
-      if (display) {
-        return padToTarget(String(player.calcHandValue()), 62, display);
+    this.displayState = function () {
+      function returnOf(card, display = true) {
+        if (card && display) {
+          return padToTarget('OF',)
+        } else if (card) {
+          return " HIDDEN ";
+        }
+        return padToTarget('', 8, false)
       }
-      return padToTarget('HIDDEN', 62, true)
 
-    }
-    let roundsPlayed = padToTarget(`PLAYING ROUND: ${GV.handsPlayed + 1} of ${GV.numberOfHands}`, 36, true);
-    console.clear();
-    console.log(
-      `  _____________________________________________________________________________________________________________________________\n`,
-      `|${padToTarget(player.name ? `${player.name.toUpperCase()}'S CARDS:` : 'PLAYER\'S CARDS:', 43, true)}|${GV.gameStarted ? roundsPlayed : ' '.repeat(36)}|${padToTarget('DEALER\'S CARDS:', 44, true)}|\n`,
-      `|___________________________________________|____________________________________|____________________________________________|\n`,
-      `|   ________    ________    ________    ________    ________   |   ________    ________    ________    ________    ________   |\n`,
-      `|  |        |  |        |  |        |  |        |  |        |  |  |        |  |        |  |        |  |        |  |        |  |\n`,
-      `|  |${returnValue(player.cards[0])}|  |${returnValue(player.cards[1])}|  |${returnValue(player.cards[2])}|  |${returnValue(player.cards[3])}|  |${returnValue(player.cards[4])}|\
+      function returnSuit(card, display = true) {
+        if (card && display) {
+          return padToTarget(`${card.suit}`)
+        }
+        return padToTarget('', 8, false)
+      }
+
+      function returnValue(card, display = true) {
+        if (card && display) {
+          return padToTarget(`${card.value}`)
+        }
+        return padToTarget('', 8, false)
+      }
+
+      function returnScore(player, display = true) {
+        if (display) {
+          return padToTarget(String(player.calcHandValue()), 62, display);
+        }
+        return padToTarget('HIDDEN', 62, true)
+
+      }
+      let roundsPlayed = padToTarget(`PLAYING ROUND: ${GV.handsPlayed + 1} of ${GV.numberOfHands}`, 36, true);
+      console.clear();
+      console.log(
+        `  _____________________________________________________________________________________________________________________________\n`,
+        `|${padToTarget(player.name ? `${player.name.toUpperCase()}'S CARDS:` : 'PLAYER\'S CARDS:', 43, true)}|${GV.gameStarted ? roundsPlayed : ' '.repeat(36)}|${padToTarget('DEALER\'S CARDS:', 44, true)}|\n`,
+        `|___________________________________________|____________________________________|____________________________________________|\n`,
+        `|   ________    ________    ________    ________    ________   |   ________    ________    ________    ________    ________   |\n`,
+        `|  |        |  |        |  |        |  |        |  |        |  |  |        |  |        |  |        |  |        |  |        |  |\n`,
+        `|  |${returnValue(player.cards[0])}|  |${returnValue(player.cards[1])}|  |${returnValue(player.cards[2])}|  |${returnValue(player.cards[3])}|  |${returnValue(player.cards[4])}|\
   |  |${returnValue(dealer.cards[0])}|  |${returnValue(dealer.cards[1], GV.gameOver)}|  |${returnValue(dealer.cards[2], GV.gameOver)}|  |${returnValue(dealer.cards[3], GV.gameOver)}|  |${returnValue(dealer.cards[4], GV.gameOver)}|  |\n`,
-      `|  |        |  |        |  |        |  |        |  |        |  |  |        |  |        |  |        |  |        |  |        |  |\n`,
-      `|  |${returnOf(player.cards[0])}|  |${returnOf(player.cards[1])}|  |${returnOf(player.cards[2])}|  |${returnOf(player.cards[3])}|  |${returnOf(player.cards[4])}|\
+        `|  |        |  |        |  |        |  |        |  |        |  |  |        |  |        |  |        |  |        |  |        |  |\n`,
+        `|  |${returnOf(player.cards[0])}|  |${returnOf(player.cards[1])}|  |${returnOf(player.cards[2])}|  |${returnOf(player.cards[3])}|  |${returnOf(player.cards[4])}|\
   |  |${returnOf(dealer.cards[0])}|  |${returnOf(dealer.cards[1], GV.gameOver)}|  |${returnOf(dealer.cards[2], GV.gameOver)}|  |${returnOf(dealer.cards[3], GV.gameOver)}|  |${returnOf(dealer.cards[4], GV.gameOver)}|  |\n`,
-      `|  |        |  |        |  |        |  |        |  |        |  |  |        |  |        |  |        |  |        |  |        |  |\n`,
-      `|  |${returnSuit(player.cards[0])}|  |${returnSuit(player.cards[1])}|  |${returnSuit(player.cards[2])}|  |${returnSuit(player.cards[3])}|  |${returnSuit(player.cards[4])}|\
+        `|  |        |  |        |  |        |  |        |  |        |  |  |        |  |        |  |        |  |        |  |        |  |\n`,
+        `|  |${returnSuit(player.cards[0])}|  |${returnSuit(player.cards[1])}|  |${returnSuit(player.cards[2])}|  |${returnSuit(player.cards[3])}|  |${returnSuit(player.cards[4])}|\
   |  |${returnSuit(dealer.cards[0])}|  |${returnSuit(dealer.cards[1], GV.gameOver)}|  |${returnSuit(dealer.cards[2], GV.gameOver)}|  |${returnSuit(dealer.cards[3], GV.gameOver)}|  |${returnSuit(dealer.cards[4], GV.gameOver)}|  |\n`,
-      `|  |________|  |________|  |________|  |________|  |________|  |  |________|  |________|  |________|  |________|  |________|  |\n`,
-      `|______________________________________________________________|______________________________________________________________|\n`,
-      `|${padToTarget(player.name ? `${player.name.toUpperCase()}'S SCORE:` : 'PLAYER\'S SCORE:', 62, true)}|${padToTarget('DEALER\'S SCORE:', 62, true)}|\n`,
-      `|______________________________________________________________|______________________________________________________________|\n`,
-      `|                                                              |                                                              |\n`,
-      `|${returnScore(player)}|${returnScore(dealer, GV.gameOver)}|\n`,
-      `|______________________________________________________________|______________________________________________________________|\n`,
-    );
+        `|  |________|  |________|  |________|  |________|  |________|  |  |________|  |________|  |________|  |________|  |________|  |\n`,
+        `|______________________________________________________________|______________________________________________________________|\n`,
+        `|${padToTarget(player.name ? `${player.name.toUpperCase()}'S SCORE:` : 'PLAYER\'S SCORE:', 62, true)}|${padToTarget('DEALER\'S SCORE:', 62, true)}|\n`,
+        `|______________________________________________________________|______________________________________________________________|\n`,
+        `|                                                              |                                                              |\n`,
+        `|${returnScore(player)}|${returnScore(dealer, GV.gameOver)}|\n`,
+        `|______________________________________________________________|______________________________________________________________|\n`,
+      );
 
-  }
-
-
-  function displayFinalState() {
-    //this is what displayState should look like 
-    //but I figured that out after it was finished 
-    //for the second time...
-    const TOTAL_WIDTH = 59;
-
-    let winnerMessage;
-    if (player.score > dealer.score) {
-      winnerMessage = 'YOU WIN!!! THINK YOU COULD LOAN ME SOME OF THAT LOOT...';
-    } else if (player.score < dealer.score) {
-      winnerMessage = 'YOU LOOSE. BETTER LUCK NEXT TIME OLD-TIMER...'
-    } else {
-      winnerMessage = 'ITS A TIE! LIVE TO GAMBLE ANOTHER DAY PARTNER...'
     }
-    console.clear();
-    console.log(' ' + '_'.repeat(TOTAL_WIDTH - 2) + ' ');
-    console.log(`|${' '.repeat(TOTAL_WIDTH - 2)}|`);
-    console.log(`|${' '.repeat(TOTAL_WIDTH - 2)}|`);
-    console.log(`|${' '.repeat(TOTAL_WIDTH - 2)}|`);
-    console.log(`|${padToTarget('THANK YOU FOR PLAYING 21!', TOTAL_WIDTH - 2, true)}|`);
-    console.log(`|${' '.repeat(TOTAL_WIDTH - 2)}|`);
-    console.log(`|${' '.repeat(TOTAL_WIDTH - 2)}|`);
-    console.log(`|${padToTarget('THE FINAL SCORE IS:', TOTAL_WIDTH - 2, true)}|`);
-    console.log(`|${' '.repeat(TOTAL_WIDTH - 2)}|`);
-    console.log(`|${padToTarget(`DEALER: ${dealer.score}`, TOTAL_WIDTH - 2, true)}|`);
-    //console.log(`|${' '.repeat(TOTAL_WIDTH - 2)}|`);
-    console.log(`|${padToTarget(`${player.name}: ${player.score}`, TOTAL_WIDTH - 2, true)}|`);
-    console.log(`|${' '.repeat(TOTAL_WIDTH - 2)}|`);
-    console.log(`|${padToTarget(winnerMessage, TOTAL_WIDTH - 2, true)}|`);
-    console.log('|' + '_'.repeat(TOTAL_WIDTH - 2) + '|');
 
-    const another_match = util.getValidInput(`WOULD YOU LIKE TO PLAY ANOTHER MATCH? (Y/N)`, 'PLEASE TYPE \'Y\' FOR YES OR \'N\' FOR NO', ['Y', 'N', 'y', 'n']);
-    if (another_match === 'y' || another_match === 'Y') {
-      return true;
-    } else {
-      return false;
+    //PRIVATE METHODS
+    function padToTarget(word, target = 8, display = true) {
+      let padFront = Math.ceil((target - word.length) / 2);
+      let padBack = Math.floor((target - word.length) / 2);
+
+      if (display) {
+        return `${' '.repeat(padFront)}${word}${' '.repeat(padBack)}`;
+      }
+      return `${' '.repeat(target)}`;
     }
+
   }
 
   function checkForWin() {
@@ -329,30 +347,16 @@ function GameObject() {
     }
   }
 
-  function displayGameOver() {
-    const winner = checkForWin();
-    if (winner === 'player') {
-      console.log('YOU WIN!!!');
-      player.score += 1;
-    } else if (winner === 'dealer') {
-      console.log('THE DEALER WINS!!!');
-      dealer.score += 1;
-    } else {
-      console.log(`IT'S A TIE!`);
-    }
-    console.log(`THE SCORE IS: \nDEALER: ${dealer.score} GAMES \n${player.name}: ${player.score} GAMES`)
-  }
-
   function playOneHand() {
     console.log('Press any key to start/play next round...');
     readline.question();
 
     init.game();
-    displayState();
+    display.displayState();
 
     while (!GV.playerTurnOver && !GV.gameOver) {
       playerTakeTurn();
-      displayState()
+      display.displayState()
       checkForWin();
     }
 
@@ -361,8 +365,9 @@ function GameObject() {
       checkForWin();
     }
     checkForWin();
-    displayState();
-    displayGameOver();
+    display.displayState();
+    display.displayGameOver();
+    //readline.question('Press any key to continue...')
     GV.handsPlayed += 1;
   }
 
@@ -377,7 +382,7 @@ function GameObject() {
         playOneHand();
       }
 
-      if (!displayFinalState()) break;
+      if (!display.displayFinalState()) break;
     }
   }
 }
