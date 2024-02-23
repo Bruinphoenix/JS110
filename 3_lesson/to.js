@@ -23,12 +23,13 @@ function joinOr(arr, delimiter = ', ', finalDelimiter = 'or') {
 }
 
 function displayGameObject(cardsInPlay, deck) {
-
-  function returnOf(card) {
-    return padToTarget('OF',)
+  const player = {
+    cards: cardsInPlay.player,
   }
 
-
+  const dealer = {
+    cards: cardsInPlay.dealer,
+  }
 
   function padToTarget(word, target = 8, display = true) {
     let padFront = Math.ceil((target - word.length) / 2);
@@ -39,8 +40,39 @@ function displayGameObject(cardsInPlay, deck) {
     }
     return `${' '.repeat(target)}`;
   }
-  let playerCard1;
 
+  function returnOf(card, display = true) {
+    if (card && display) {
+      return padToTarget('OF',)
+    } else if (card) {
+      return " HIDDEN ";
+    }
+    return padToTarget('', 8, false)
+  }
+
+  function returnSuit(card, display = true) {
+    if (card && display) {
+      return padToTarget(`${card.suit}`)
+    }
+    return padToTarget('', 8, false)
+  }
+
+  function returnValue(card, display = true) {
+    if (card && display) {
+      return padToTarget(`${card.value}`)
+    }
+    return padToTarget('', 8, false)
+  }
+
+  function returnScore(cards, display = true) {
+    if (display) {
+      return padToTarget(String(calcHandValue(cards)), 62, display);
+    }
+    return padToTarget('HIDDEN', 62, true)
+
+  }
+
+  const gameOver = false;
   console.clear();
   console.log(
     `  _____________________________________________________________________________________________________________________________\n`,
@@ -48,18 +80,20 @@ function displayGameObject(cardsInPlay, deck) {
     `|______________________________________________________________|______________________________________________________________|\n`,
     `|   ________    ________    ________    ________    ________   |   ________    ________    ________    ________    ________   |\n`,
     `|  |        |  |        |  |        |  |        |  |        |  |  |        |  |        |  |        |  |        |  |        |  |\n`,
+    `|  |${returnValue(player.cards[0])}|  |${returnValue(player.cards[1])}|  |${returnValue(player.cards[2])}|  |${returnValue(player.cards[3])}|  |${returnValue(player.cards[4])}|\
+  |  |${returnValue(dealer.cards[0])}|  |${returnValue(dealer.cards[1], gameOver)}|  |${returnValue(dealer.cards[2], gameOver)}|  |${returnValue(dealer.cards[3], gameOver)}|  |${returnValue(dealer.cards[4], gameOver)}|  |\n`,
     `|  |        |  |        |  |        |  |        |  |        |  |  |        |  |        |  |        |  |        |  |        |  |\n`,
+    `|  |${returnOf(player.cards[0])}|  |${returnOf(player.cards[1])}|  |${returnOf(player.cards[2])}|  |${returnOf(player.cards[3])}|  |${returnOf(player.cards[4])}|\
+  |  |${returnOf(dealer.cards[0])}|  |${returnOf(dealer.cards[1], gameOver)}|  |${returnOf(dealer.cards[2], gameOver)}|  |${returnOf(dealer.cards[3], gameOver)}|  |${returnOf(dealer.cards[4], gameOver)}|  |\n`,
     `|  |        |  |        |  |        |  |        |  |        |  |  |        |  |        |  |        |  |        |  |        |  |\n`,
-    `|  |${returnOf(playerCard1)}|  |${returnOf(playerCard1)}|  |${returnOf(playerCard1)}|  |${returnOf(playerCard1)}|  |${returnOf(playerCard1)}|\
-  |  |${returnOf(playerCard1)}|  |${returnOf(playerCard1)}|  |${returnOf(playerCard1)}|  |${returnOf(playerCard1)}|  |${returnOf(playerCard1)}|  |\n`,
-    `|  |        |  |        |  |        |  |        |  |        |  |  |        |  |        |  |        |  |        |  |        |  |\n`,
-    `|  |        |  |        |  |        |  |        |  |        |  |  |        |  |        |  |        |  |        |  |        |  |\n`,
+    `|  |${returnSuit(player.cards[0])}|  |${returnSuit(player.cards[1])}|  |${returnSuit(player.cards[2])}|  |${returnSuit(player.cards[3])}|  |${returnSuit(player.cards[4])}|\
+  |  |${returnSuit(dealer.cards[0])}|  |${returnSuit(dealer.cards[1], gameOver)}|  |${returnSuit(dealer.cards[2], gameOver)}|  |${returnSuit(dealer.cards[3], gameOver)}|  |${returnSuit(dealer.cards[4], gameOver)}|  |\n`,
     `|  |________|  |________|  |________|  |________|  |________|  |  |________|  |________|  |________|  |________|  |________|  |\n`,
     `|______________________________________________________________|______________________________________________________________|\n`,
     `|                         PLAYER SCORE:                        |                         DEALER SCORE:                        |\n`,
     `|______________________________________________________________|______________________________________________________________|\n`,
     `|                                                              |                                                              |\n`,
-    `|                                                              |                                                              |\n`,
+    `|${returnScore(player.cards)}|${returnScore(dealer.cards, gameOver)}|\n`,
     `|______________________________________________________________|______________________________________________________________|\n`,
   );
 
@@ -217,27 +251,26 @@ function dealerTurn(cardsInPlay, deck) {
 
 
 function play21() {
-  while (true) {
-    console.clear();
-    let deck = generateDeck();
+  // while (true) {
+  console.clear();
+  let deck = generateDeck();
 
-    let cardsInPlay = {
-      dealer: deal(deck, 2),
-      player: deal(deck, 2),
-    }
-
-    playerTurn(cardsInPlay, deck);
-    checkForWin(cardsInPlay)
-
-    dealerTurn(cardsInPlay, deck);
-    checkForWin(cardsInPlay, true);
-
-    let playAgain = util.getValidInput('Play again (y/n)', ' ', ['y', 'n'])
-    if (playAgain === 'n') break;
+  let cardsInPlay = {
+    dealer: deal(deck, 2),
+    player: deal(deck, 2),
   }
+  displayGameObject(cardsInPlay);
+
+  playerTurn(cardsInPlay, deck);
+  checkForWin(cardsInPlay)
+
+  dealerTurn(cardsInPlay, deck);
+  checkForWin(cardsInPlay, true);
+
+
+  //let playAgain = util.getValidInput('Play again (y/n)', ' ', ['y', 'n'])
+  //if (playAgain === 'n') break;
+  //}
 }
 
-//play21();
-
-//console.log(calcHandValue([{ suit: 'Clubs', value: 6 }, { suit: 'Clubs', value: 'Jack' }]))
-displayGameObject();
+play21();
