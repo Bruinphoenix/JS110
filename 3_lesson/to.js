@@ -219,6 +219,7 @@ function checkForWin(cardsInPlay, playOver = false) {
     console.log('The player won!')
     return 'player';
   }
+
   if (playerScore > 21) {
     displayBoard(cardsInPlay, true);
     console.log('The dealer won!')

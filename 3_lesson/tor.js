@@ -114,16 +114,18 @@ function GameObject() {
   const deck = new Deck();
   const player = new Player();
   const dealer = new Player();
+
   let playerTurnOver = false;
   let dealerTurnOver = false;
-  gameStarted = false;
+  let gameStarted = false;
   let gameOver = false;
+
   let numberOfHands;
   let handsPlayed = 0;
 
   //PRIVATE METHODS
   function initGame() {
-    //clear old hand
+    //clear old hands
     player.newHand();
     dealer.newHand();
     //deal 2 cards to player & dealer
@@ -135,19 +137,18 @@ function GameObject() {
     gameOver = false;
   }
 
+  function padToTarget(word, target = 8, display = true) {
+    let padFront = Math.ceil((target - word.length) / 2);
+    let padBack = Math.floor((target - word.length) / 2);
+
+    if (display) {
+      return `${' '.repeat(padFront)}${word}${' '.repeat(padBack)}`;
+    }
+    return `${' '.repeat(target)}`;
+  }
+
 
   function displayState() {
-
-    function padToTarget(word, target = 8, display = true) {
-      let padFront = Math.ceil((target - word.length) / 2);
-      let padBack = Math.floor((target - word.length) / 2);
-
-      if (display) {
-        return `${' '.repeat(padFront)}${word}${' '.repeat(padBack)}`;
-      }
-      return `${' '.repeat(target)}`;
-    }
-
     function returnOf(card, display = true) {
       if (card && display) {
         return padToTarget('OF',)
@@ -203,6 +204,39 @@ function GameObject() {
       `|______________________________________________________________|______________________________________________________________|\n`,
     );
 
+  }
+
+
+  function displayFinalState() {
+    //this is what display state should look like 
+    //but I figured that out after it was finished 
+    //for the second time
+    const TOTAL_WIDTH = 59;
+
+    let winnerMessage;
+    if (player.score > dealer.score) {
+      winnerMessage = 'YOU WIN!!! THINK YOU COULD LOAN ME SOME OF THAT LOOT...';
+    } else if (player.score < dealer.score) {
+      winnerMessage = 'YOU LOOSE. BETTER LUCK NEXT TIME OLD-TIMER...'
+    } else {
+      winnerMessage = 'ITS A TIE! LIVE TO GAMBLE ANOTHER DAY PARTNER...'
+    }
+    console.clear();
+    console.log(' ' + '_'.repeat(TOTAL_WIDTH - 2) + ' ');
+    console.log(`|${' '.repeat(TOTAL_WIDTH - 2)}|`);
+    console.log(`|${' '.repeat(TOTAL_WIDTH - 2)}|`);
+    console.log(`|${' '.repeat(TOTAL_WIDTH - 2)}|`);
+    console.log(`|${padToTarget('THANK YOU FOR PLAYING 21!', TOTAL_WIDTH - 2, true)}|`);
+    console.log(`|${' '.repeat(TOTAL_WIDTH - 2)}|`);
+    console.log(`|${' '.repeat(TOTAL_WIDTH - 2)}|`);
+    console.log(`|${padToTarget('THE FINAL SCORE IS:', TOTAL_WIDTH - 2, true)}|`);
+    console.log(`|${' '.repeat(TOTAL_WIDTH - 2)}|`);
+    console.log(`|${padToTarget(`DEALER: ${dealer.score}`, TOTAL_WIDTH - 2, true)}|`);
+    //console.log(`|${' '.repeat(TOTAL_WIDTH - 2)}|`);
+    console.log(`|${padToTarget(`${player.name}: ${player.score}`, TOTAL_WIDTH - 2, true)}|`);
+    console.log(`|${' '.repeat(TOTAL_WIDTH - 2)}|`);
+    console.log(`|${padToTarget(winnerMessage, TOTAL_WIDTH - 2, true)}|`);
+    console.log('|' + '_'.repeat(TOTAL_WIDTH - 2) + '|');
   }
 
   function checkForWin() {
@@ -262,10 +296,6 @@ function GameObject() {
     }
     console.log(`THE SCORE IS: \nDEALER: ${dealer.score} GAMES \n${player.name}: ${player.score} GAMES`)
   }
-  function displayFinalState() {
-    //TODO
-    console.log('goodbye');
-  }
 
   //PUBLIC METHODS
   this.play = function () {
@@ -307,4 +337,5 @@ function GameObject() {
 let game = new GameObject();
 game.play();
 
-//TODO: IMPLEMENT FINAL GAMEOVER OUTPUT
+
+//TODO: IMPLEMENT FINAL GAMEOVER OUTPUT & REFACTOR DISPLAYGAMESTATE TO BE OOP COMPATIBLE
