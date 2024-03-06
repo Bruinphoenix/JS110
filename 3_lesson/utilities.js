@@ -45,7 +45,15 @@ function returnIntWithSuffix(int) {
   return (stringInt) + suffix;
 }
 
+function padToTarget(word, target = 8, display = true) {
+  let padFront = Math.ceil((target - word.length) / 2);
+  let padBack = Math.floor((target - word.length) / 2);
 
+  if (display) {
+    return `${' '.repeat(padFront)}${word}${' '.repeat(padBack)}`;
+  }
+  return `${' '.repeat(target)}`;
+}
 //ARRAY & OBJECT METHODS-----------------------------------------------------
 
 function randomObjValue(obj) {
@@ -173,6 +181,7 @@ module.exports = {
   isAlpha,
   invalidNumber,
   deepFreeze,
+  padToTarget,
 }
 
 

@@ -1,0 +1,16 @@
+{
+  "promptNumHands": "How many hands would you like to play today?",
+  "numHandsError": "Please enter a number of hands you would like to play... (in digits)",
+  "promptPlayerName": "Welcome to 21! Please enter your name.",
+  "playerWinHand": "YOU WIN!!!",
+  "dealerWinHand": "THE DEALER WINS!!!",
+  "tieHand": "IT'S A TIE!",
+  "playerWinMatch": "YOU WIN!!! THINK YOU COULD LOAN ME SOME OF THAT LOOT...",
+  "dealerWinMatch": "YOU LOOSE. BETTER LUCK NEXT TIME OLD-TIMER...",
+  "tieMatch": "ITS A TIE! LIVE TO GAMBLE ANOTHER DAY PARTNER...",
+  "promtPlayAgain": "WOULD YOU LIKE TO PLAY ANOTHER MATCH? (Y/N)",
+  "playAgainError": "PLEASE TYPE 'Y' FOR YES OR 'N' FOR NO",
+  "promptHit": "Would you like to hit? (y/n)",
+  "promptHitError": "Hmmm. That does not seem like a valid option. \n Please press y for yes or n for no",
+  "playNextHand": "Press enter to start/play next hand..."
+}

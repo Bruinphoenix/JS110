@@ -1,6 +1,8 @@
 const util = require('./utilities.js');
 const readline = require('readline-sync');
 const WINNING_VALUE = 21;
+const MESSAGES = require('./twentyOne_messages.json');
+const padToTarget = util.padToTarget;
 
 //CARD
 function Card(suit, value) {
@@ -16,11 +18,11 @@ function Card(suit, value) {
     get: function () {
       return value;
     },
-  })
+  });
 }
 
-//_________________________________________________________________________________________________________________________________________
-//DECK 
+//____________________________________________________________________________
+//DECK
 function Deck() {
   const SUITS = ['Hearts', 'Diamonds', 'Clubs', 'Spades'];
   const VALUES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 'Jack', 'Queen', 'King', 'Ace'];
@@ -32,16 +34,16 @@ function Deck() {
       VALUES.forEach(value => {
         const card = new Card(suit, value);
         deck.push(card);
-      })
-    })
+      });
+    });
     shuffleDeck();
   }
 
   //PRIVATE METHODS
   function shuffleDeck() {
     for (let i = deck.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [deck[i], deck[j]] = [deck[j], deck[i]];
+      const replacer = Math.floor(Math.random() * (i + 1));
+      [deck[i], deck[replacer]] = [deck[replacer], deck[i]];
     }
   }
 
@@ -57,11 +59,11 @@ function Deck() {
       cards.push(deck.pop());
     }
     return cards;
-  }
+  };
 
 }
 
-//_________________________________________________________________________________________________________________________________________
+//______________________________________________________________________
 function Player() {
   this.name = undefined;
   this.score = 0;
@@ -72,19 +74,19 @@ function Player() {
     get: function () {
       return cards;
     }
-  })
+  });
 
   this.pushCards = function (dealt) {
     dealt.forEach(card => {
       cards.push(card);
-    })
-  }
+    });
+  };
 
   this.discardCards = function () {
     while (cards.length) {
       cards.pop();
     }
-  }
+  };
 
   this.calcHandValue = function () {
     function cardValue(card) {
@@ -111,10 +113,10 @@ function Player() {
       }
     }
     return handValue;
-  }
+  };
 }
 
-//_________________________________________________________________________________________________________________________________________
+//_______________________________________________________________________
 function GameVariables() {
   this.playerTurnOver = false;
   this.dealerTurnOver = false;
@@ -124,14 +126,13 @@ function GameVariables() {
   this.numberOfHands = undefined;
   this.handsPlayed = 0;
 }
-//_________________________________________________________________________________________________________________________________________
+//_______________________________________________________________________
 
 function GameObject() {
   const deck = new Deck();
   const player = new Player();
   const dealer = new Player();
   const GV = new GameVariables();
-  const display = new DisplayObject();
 
   //INITIALIZATION METHODS
   const init = {
@@ -153,7 +154,10 @@ function GameObject() {
       resetGameValues();
       display.displayState();
 
-      GV.numberOfHands = util.getValidNumber('How many hands would you like to play today?', 'Please enter a number of hands you would like to play...', false)
+      GV.numberOfHands = util.getValidNumber(
+        MESSAGES.promptNumHands,
+        MESSAGES.numHandsError, false);
+
       console.log(`Great! Lets play ${GV.numberOfHands} hands together!`);
     },
 
@@ -172,40 +176,40 @@ function GameObject() {
 
     playerInfo: function () {
       display.displayState();
-      console.log('Welcome to 21! Please enter your name.')
+      console.log(MESSAGES.promptPlayerName);
       player.name = readline.question().toUpperCase();
     },
-  }
+  };
 
   //DISPLAY METHODS
-  function DisplayObject() {
-    this.displayGameOver = function () {
-      const winner = checkForWin();
+  const display = {
+    displayHandOver: function () {
+      const winner = gameLogic.checkForWin();
       if (winner === 'player') {
-        console.log('YOU WIN!!!');
+        console.log(MESSAGES.playerWinHand);
         player.score += 1;
       } else if (winner === 'dealer') {
-        console.log('THE DEALER WINS!!!');
+        console.log(MESSAGES.dealerWinHand);
         dealer.score += 1;
       } else {
-        console.log(`IT'S A TIE!`);
+        console.log(MESSAGES.tieHand);
       }
-      console.log(`THE SCORE IS: \nDEALER: ${dealer.score} GAMES \n${player.name}: ${player.score} GAMES`)
-    }
+      console.log(`THE SCORE IS: \nDEALER: ${dealer.score} GAMES \n${player.name}: ${player.score} GAMES`);
+    },
 
-    this.displayFinalState = function () {
-      //this is what displayState should look like 
-      //but I figured that out after it was finished 
+    displayFinalState: function () {
+      //this is what displayState should look like
+      //but I figured that out after it was finished
       //for the second time...
       const TOTAL_WIDTH = 59;
 
       let winnerMessage;
       if (player.score > dealer.score) {
-        winnerMessage = 'YOU WIN!!! THINK YOU COULD LOAN ME SOME OF THAT LOOT...';
+        winnerMessage = MESSAGES.playerWinMatch;
       } else if (player.score < dealer.score) {
-        winnerMessage = 'YOU LOOSE. BETTER LUCK NEXT TIME OLD-TIMER...'
+        winnerMessage = MESSAGES.dealerWinMatch;
       } else {
-        winnerMessage = 'ITS A TIE! LIVE TO GAMBLE ANOTHER DAY PARTNER...'
+        winnerMessage = MESSAGES.tieMatch;
       }
       console.clear();
       console.log(' ' + '_'.repeat(TOTAL_WIDTH - 2) + ' ');
@@ -224,43 +228,43 @@ function GameObject() {
       console.log(`|${padToTarget(winnerMessage, TOTAL_WIDTH - 2, true)}|`);
       console.log('|' + '_'.repeat(TOTAL_WIDTH - 2) + '|');
 
-      const another_match = util.getValidInput(`WOULD YOU LIKE TO PLAY ANOTHER MATCH? (Y/N)`, 'PLEASE TYPE \'Y\' FOR YES OR \'N\' FOR NO', ['Y', 'N', 'y', 'n']);
-      if (another_match === 'y' || another_match === 'Y') {
+      const playAnotherMatch = util.getValidInput(MESSAGES.promtPlayAgain, MESSAGES.playAgainError, ['Y', 'N', 'y', 'n']);
+      if (playAnotherMatch === 'y' || playAnotherMatch === 'Y') {
         return true;
       } else {
         return false;
       }
-    }
+    },
 
-    this.displayState = function () {
+    displayState: function () {
       function returnOf(card, display = true) {
         if (card && display) {
-          return padToTarget('OF',)
+          return padToTarget('OF',);
         } else if (card) {
           return " HIDDEN ";
         }
-        return padToTarget('', 8, false)
+        return padToTarget('', 8, false);
       }
 
       function returnSuit(card, display = true) {
         if (card && display) {
-          return padToTarget(`${card.suit}`)
+          return padToTarget(`${card.suit}`);
         }
-        return padToTarget('', 8, false)
+        return padToTarget('', 8, false);
       }
 
       function returnValue(card, display = true) {
         if (card && display) {
-          return padToTarget(`${card.value}`)
+          return padToTarget(`${card.value}`);
         }
-        return padToTarget('', 8, false)
+        return padToTarget('', 8, false);
       }
 
       function returnScore(player, display = true) {
         if (display) {
           return padToTarget(String(player.calcHandValue()), 62, display);
         }
-        return padToTarget('HIDDEN', 62, true)
+        return padToTarget('HIDDEN', 62, true);
 
       }
       let roundsPlayed = padToTarget(`PLAYING ROUND: ${GV.handsPlayed + 1} of ${GV.numberOfHands}`, 36, true);
@@ -287,89 +291,78 @@ function GameObject() {
         `|${returnScore(player)}|${returnScore(dealer, GV.gameOver)}|\n`,
         `|______________________________________________________________|______________________________________________________________|\n`,
       );
-
     }
+  };
 
-    //PRIVATE METHODS
-    function padToTarget(word, target = 8, display = true) {
-      let padFront = Math.ceil((target - word.length) / 2);
-      let padBack = Math.floor((target - word.length) / 2);
+  //GAME LOGIC METHODS
+  const gameLogic = {
+    checkForWin: function () {
+      const dealerScore = dealer.calcHandValue();
+      const playerScore = player.calcHandValue();
 
-      if (display) {
-        return `${' '.repeat(padFront)}${word}${' '.repeat(padBack)}`;
-      }
-      return `${' '.repeat(target)}`;
-    }
-
-  }
-
-  function checkForWin() {
-    const dealerScore = dealer.calcHandValue();
-    const playerScore = player.calcHandValue();
-
-    if (dealerScore > 21) {
-      GV.gameOver = true;
-      return 'player';
-    }
-
-    if (playerScore > 21) {
-      GV.gameOver = true;
-      return 'dealer';
-    }
-
-    if (GV.dealerTurnOver) {
-      GV.gameOver = true;
-      if (dealerScore > playerScore) {
-        return 'dealer';
-      }
-      if (playerScore === dealerScore) {
-        return false;
-      } else {
+      if (dealerScore > 21) {
+        GV.gameOver = true;
         return 'player';
       }
+
+      if (playerScore > 21) {
+        GV.gameOver = true;
+        return 'dealer';
+      }
+
+      if (GV.dealerTurnOver) {
+        GV.gameOver = true;
+        if (dealerScore > playerScore) {
+          return 'dealer';
+        }
+        if (playerScore === dealerScore) {
+          return false;
+        } else {
+          return 'player';
+        }
+      }
+      return false;
+    },
+
+    dealerTakeTurn: function () {
+      while (dealer.calcHandValue() < 17) {
+        dealer.pushCards(deck.deal(1));
+      }
+      GV.dealerTurnOver = true;
+    },
+
+    playerTakeTurn: function () {
+      let wantToHit = util.getValidInput(MESSAGES.promptHit, MESSAGES.promptHitError, ['y', 'Y', 'N', 'n']);
+      if (wantToHit === 'y' || wantToHit === 'Y') {
+        player.pushCards(deck.deal(1));
+      } else {
+        GV.playerTurnOver = true;
+      }
+    },
+
+    playOneHand: function () {
+      console.log(MESSAGES.playNextHand);
+      readline.question();
+
+      init.game();
+      display.displayState();
+
+      while (!GV.playerTurnOver && !GV.gameOver) {
+        this.playerTakeTurn();
+        display.displayState();
+        this.checkForWin();
+      }
+
+      if (!GV.gameOver) {
+        this.dealerTakeTurn();
+        this.checkForWin();
+      }
+      this.checkForWin();
+      display.displayState();
+      display.displayHandOver();
+      GV.handsPlayed += 1;
     }
-    return false;
-  }
-
-  function dealerTakeTurn() {
-    while (dealer.calcHandValue() < 17) {
-      dealer.pushCards(deck.deal(1));
-    }
-    GV.dealerTurnOver = true;
-  }
-
-  function playerTakeTurn() {
-    let wantToHit = util.getValidInput('Would you like to hit? (y/n)', 'Hmmm. That does not seem like a valid option. \n Please press y for yes or n for no', ['y', 'n'])
-    if (wantToHit === 'y') {
-      player.pushCards(deck.deal(1));
-    } else {
-      GV.playerTurnOver = true;
-    }
-  }
-
-  function playOneHand() {
-    console.log('Press any key to start/play next round...');
-    readline.question();
-
-    init.game();
-    display.displayState();
-
-    while (!GV.playerTurnOver && !GV.gameOver) {
-      playerTakeTurn();
-      display.displayState()
-      checkForWin();
-    }
-
-    if (!GV.gameOver) {
-      dealerTakeTurn();
-      checkForWin();
-    }
-    checkForWin();
-    display.displayState();
-    display.displayGameOver();
-    //readline.question('Press any key to continue...')
-    GV.handsPlayed += 1;
-  }
+  };
 
   //PUBLIC METHODS
   this.play = function () {
@@ -379,16 +372,13 @@ function GameObject() {
       init.match();
 
       while (GV.handsPlayed < GV.numberOfHands) {
-        playOneHand();
+        gameLogic.playOneHand();
       }
 
       if (!display.displayFinalState()) break;
     }
-  }
+  };
 }
 
 let game = new GameObject();
 game.play();
-
-
-//TODO: ad imput verification on how many hands
